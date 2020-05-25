@@ -27,12 +27,12 @@ public class Serverx {
     ServerSocket serverSocket;
     Socket clientSocket = null;
     InputStream input;
-    TargetDataLine targetDataLine;
+    TargetDataLine tdl;
     OutputStream out;
     AudioFormat audioFormat;
     SourceDataLine sourceDataLine;
     int Size = 10000;
-    byte tempBuffer[] = new byte[Size];
+    byte tBuffer[] = new byte[Size];
     static Mixer.Info[] mixerInfo = AudioSystem.getMixerInfo();
 
     Serverx() throws LineUnavailableException, HeadlessException, UnknownHostException {
@@ -61,8 +61,8 @@ public class Serverx {
             captureAudio();
             input = new BufferedInputStream(clientSocket.getInputStream());
             out = new BufferedOutputStream(clientSocket.getOutputStream());
-            while (input.read(tempBuffer) != -1) {
-                sourceDataLine.write(tempBuffer, 0, Size);
+            while (input.read(tBuffer) != -1) {
+                sourceDataLine.write(tBuffer, 0, Size);
             }
             serverSocket.close();
             clientSocket.close();
@@ -96,11 +96,11 @@ public class Serverx {
                 mixer = AudioSystem.getMixer(mixerInfo[3]);      
                 if (mixer.isLineSupported(dataLineInfo)) {
                     System.out.println(cnt+":"+mixerInfo[cnt].getName());
-                    targetDataLine = (TargetDataLine) mixer.getLine(dataLineInfo);
+                    tdl = (TargetDataLine) mixer.getLine(dataLineInfo);
                 }
             }
-            targetDataLine.open(audioFormat);
-            targetDataLine.start();
+            tdl.open(audioFormat);
+            tdl.start();
 
             Thread captureThread = new CaptureThread();
             captureThread.start();
@@ -112,14 +112,14 @@ public class Serverx {
 
     class CaptureThread extends Thread {
 
-        byte tempBuffer[] = new byte[Size];
+        byte tBuffer[] = new byte[Size];
 
         @Override
         public void run() {
             try {
                 while (true) {
-                    int cnt = targetDataLine.read(tempBuffer, 0, tempBuffer.length);
-                    out.write(tempBuffer);
+                    int cnt = tdl.read(tBuffer, 0, tBuffer.length);
+                    out.write(tBuffer);
                     out.flush();
                     System.out.println(cnt);
                 }
