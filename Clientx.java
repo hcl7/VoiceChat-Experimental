@@ -33,13 +33,13 @@ public class Clientx {
     boolean stopCapture = false;
     ByteArrayOutputStream byteArrayOutputStream;
     AudioFormat audioFormat;
-    TargetDataLine targetDataLine;
+    TargetDataLine tdl;
     AudioInputStream audioInputStream;
     BufferedOutputStream out = null;
     BufferedInputStream in = null;
     Socket sock = null;
     private Socket socket = null;
-    SourceDataLine sourceDataLine;
+    SourceDataLine sdl;
     int Size = 10000;
     /**
      * Launch the application.
@@ -103,15 +103,15 @@ public class Clientx {
             audioFormat = aobj.getAudioFormat();
             DataLine.Info dataLineInfo = new DataLine.Info(TargetDataLine.class, audioFormat);
             Mixer mixer = aobj.getMicrophone();    
-            targetDataLine = (TargetDataLine) mixer.getLine(dataLineInfo);
-            targetDataLine.open(audioFormat);
-            targetDataLine.start();
+            tdl = (TargetDataLine) mixer.getLine(dataLineInfo);
+            tdl.open(audioFormat);
+            tdl.start();
             Thread captureThread = new CaptureThread();
             captureThread.start();
             DataLine.Info dataLineInfo1 = new DataLine.Info(SourceDataLine.class, audioFormat);
-	    sourceDataLine = (SourceDataLine) AudioSystem.getLine(dataLineInfo1);
-	    sourceDataLine.open(audioFormat);
-	    sourceDataLine.start();
+	    sdl = (SourceDataLine) AudioSystem.getLine(dataLineInfo1);
+	    sdl.open(audioFormat);
+	    sdl.start();
             Thread playThread = new PlayThread();
             playThread.start();
 	} catch (IOException | LineUnavailableException e) {
@@ -127,7 +127,7 @@ public class Clientx {
 	        stopCapture = false;
 	        try {
 	            while (!stopCapture) {
-	                int cnt = targetDataLine.read(tempBuffer, 0, tempBuffer.length);
+	                int cnt = tdl.read(tempBuffer, 0, tempBuffer.length);
 	                out.write(tempBuffer);
 	                if (cnt > 0) {
 	                    byteArrayOutputStream.write(tempBuffer, 0, cnt);
@@ -147,10 +147,10 @@ public class Clientx {
 	    public void run() {
 	        try {
 	            while (in.read(tempBuffer) != -1) {
-	                sourceDataLine.write(tempBuffer, 0, Size);
+	                sdl.write(tempBuffer, 0, Size);
 	            }
-	            sourceDataLine.drain();
-	            sourceDataLine.close();
+	            sdl.drain();
+	            sdl.close();
 	        } catch (IOException e) {
                     System.out.println("PlayThread Exception" + e);
 	        }
